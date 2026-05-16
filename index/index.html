@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat IA</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+            <h2>Asistente IA</h2>
+            <span>● Online</span>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+
+            <div class="message bot-message">
+                Hola 👋 ¿En qué puedo ayudarte?
+            </div>
+
+            <div id="loadingMessage" class="loading-message">
+                La IA está escribiendo...
+            </div>
+
+        </div>
+
+        <div class="chat-input-container">
+
+            <input
+                type="text"
+                id="inputMessage"
+                placeholder="Escribe un mensaje..."
+            >
+
+            <button id="sendButton">
+                Enviar
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const inputMessage = document.getElementById("inputMessage");
+        const sendButton = document.getElementById("sendButton");
+        const chatMessages = document.getElementById("chatMessages");
+        const loadingMessage = document.getElementById("loadingMessage");
+
+
+
+        // ============================
+        // AGREGAR MENSAJES
+        // ============================
+
+        function addMessage(text, sender) {
+
+            const messageDiv = document.createElement("div");
+
+            messageDiv.classList.add("message");
+
+            if(sender === "user"){
+                messageDiv.classList.add("user-message");
+            }
+            else{
+                messageDiv.classList.add("bot-message");
+            }
+
+            messageDiv.textContent = text;
+
+            chatMessages.appendChild(messageDiv);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+
+
+        // ============================
+        // ENVIAR MENSAJE
+        // ============================
+
+        async function sendMessage(){
+
+            const message = inputMessage.value.trim();
+
+            if(message === "") return;
+
+
+            // Mostrar mensaje usuario
+            addMessage(message, "user");
+
+            inputMessage.value = "";
+
+             // MOSTRAR CARGANDO
+            loadingMessage.style.display = "block";
+
+
+            try{
+
+                const response = await fetch("http://127.0.0.1:8000/ai-chat", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        message: message
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+                        
+                // OCULTAR CARGANDO
+                loadingMessage.style.display = "none";
+
+                addMessage(data, "bot");
+
+
+
+            }
+            catch(error){
+
+                console.error(error);
+
+                addMessage(
+                    "Error conectando con el servidor",
+                    "bot"
+                );
+            }
+
+        }
+
+
+
+        // ============================
+        // EVENTOS
+        // ============================
+
+        sendButton.addEventListener("click", sendMessage);
+
+
+        inputMessage.addEventListener("keypress", function(event){
+
+            if(event.key === "Enter"){
+                sendMessage();
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
